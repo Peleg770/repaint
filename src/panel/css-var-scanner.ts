@@ -63,3 +63,58 @@ function normalizeHex(hex: string): string {
   if (hex.length === 4) return '#' + hex[1]+hex[1] + hex[2]+hex[2] + hex[3]+hex[3];
   return hex.slice(0, 7).toLowerCase();
 }
+
+/**
+ * Scans up to `limit` DOM elements and returns the subset of `tokens` whose
+ * hex value appears in any element's computed color, background, or border.
+ * Used to power the "On this page" section of the color picker.
+ */
+export function findUsedTokens(tokens: ScannedToken[], limit = 400): ScannedToken[] {
+  if (tokens.length === 0) return [];
+  const hexSet = new Set<string>();
+  const elements = Array.from(document.querySelectorAll('*')).slice(0, limit);
+  for (const el of elements) {
+    const cs = getComputedStyle(el);
+    for (const prop of ['color', 'backgroundColor', 'borderTopColor'] as const) {
+      const val = cs[prop];
+      if (!val || val === 'transparent') continue;
+      const hex = rgbStringToHex(val);
+      if (hex) hexSet.add(hex);
+    }
+  }
+  // Deduplicate: if two tokens share the same hex, only keep the first.
+  const seen = new Set<string>();
+  return tokens.filter(t => {
+    if (!hexSet.has(t.hex) || seen.has(t.hex)) return false;
+    seen.add(t.hex);
+    return true;
+  });
+}
+
+/**
+ * Groups tokens by a normalized prefix derived from their name.
+ * Examples: "--color-primary-500" → "Primary", "--c-text-link" → "Text",
+ * "--brand-blue" → "Brand", "--gray-200" → "Gray".
+ */
+export function groupTokensByPrefix(tokens: ScannedToken[]): Array<{ heading: string; tokens: ScannedToken[] }> {
+  const groups = new Map<string, ScannedToken[]>();
+  for (const t of tokens) {
+    const group = extractGroup(t.name);
+    if (!groups.has(group)) groups.set(group, []);
+    groups.get(group)!.push(t);
+  }
+  return Array.from(groups.entries())
+    .map(([heading, list]) => ({ heading, tokens: list }))
+    .sort((a, b) => a.heading.localeCompare(b.heading));
+}
+
+function extractGroup(name: string): string {
+  // Strip common design-system prefixes, then take the first meaningful segment.
+  let n = name;
+  n = n.replace(/^c-/, '');         // --c-text-* (CX)
+  n = n.replace(/^color-/, '');     // --color-primary-*
+  n = n.replace(/^palette-/, '');   // --palette-blue-*
+  n = n.replace(/^ds-/, '');        // --ds-color-*
+  const seg = n.split('-')[0] || 'Other';
+  return seg.charAt(0).toUpperCase() + seg.slice(1);
+}

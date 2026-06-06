@@ -5,6 +5,7 @@
 // `#rrggbb` for one-off custom values.
 
 import type { ScannedToken } from '../css-var-scanner';
+import { findUsedTokens, groupTokensByPrefix } from '../css-var-scanner';
 
 export interface NarrowedTokens {
   /** Tokens to render in the popover, in display order. */
@@ -93,7 +94,7 @@ export function createColorChip(props: ColorChipProps): HTMLDivElement {
       tokens: props.tokens,
       current: readCurrentValue(props.el, props.cssProperty),
       onPickToken: token => {
-        props.onChange(token.cssVar);
+        props.onChange(`var(${token.cssVar})`);
         refresh();
       },
       onPickCustom: hex => {
@@ -202,29 +203,50 @@ function openColorPopover(opts: OpenPopoverProps): void {
   shadowRoot.appendChild(overlay);
 
   const currentToken = findTokenByCssValue(opts.tokens, opts.current.raw);
-  const { list: roleTokens, offScale } = selectVisibleTokens(opts.tokens, currentToken);
+  const { offScale } = selectVisibleTokens(opts.tokens, currentToken);
+
+  // Compute "on this page" tokens once when popover opens (lazy, ~400 elements).
+  const pageTokens = findUsedTokens(opts.tokens);
+  const grouped = groupTokensByPrefix(opts.tokens);
 
   const renderBody = (query: string) => {
     body.innerHTML = '';
-
     const q = query.trim().toLowerCase();
-    const filtered = q ? roleTokens.filter(t => t.name.toLowerCase().includes(q) || t.cssVar.toLowerCase().includes(q)) : roleTokens;
 
-    // Render all matching tokens in a single flat group.
-    if (filtered.length > 0) {
-      body.appendChild(renderCategory('Tokens', filtered, currentToken, opts.onPickToken, overlay, offScale));
+    if (q) {
+      // Search mode: flat results across all tokens
+      const filtered = opts.tokens.filter(
+        t => t.name.toLowerCase().includes(q) || t.cssVar.toLowerCase().includes(q),
+      );
+      if (filtered.length > 0) {
+        body.appendChild(renderCategory(`Results (${filtered.length})`, filtered, currentToken, opts.onPickToken, overlay, offScale));
+      } else {
+        const empty = document.createElement('div');
+        empty.className = 'swatch-picker-empty';
+        empty.textContent = `No tokens match "${q}"`;
+        body.appendChild(empty);
+      }
+    } else {
+      // Default: two-section layout
+      // Section 1 — On this page
+      if (pageTokens.length > 0) {
+        body.appendChild(renderCategory('On this page', pageTokens, currentToken, opts.onPickToken, overlay, offScale));
+      }
+      // Section 2 — All tokens grouped by prefix
+      if (opts.tokens.length > 0) {
+        if (grouped.length === 1) {
+          // Only one group: show flat without a nested heading
+          body.appendChild(renderCategory('All tokens', grouped[0].tokens, currentToken, opts.onPickToken, overlay, offScale));
+        } else {
+          for (const group of grouped) {
+            body.appendChild(renderCategory(group.heading, group.tokens, currentToken, opts.onPickToken, overlay, offScale));
+          }
+        }
+      }
     }
 
-    // Custom hex footer — always visible so users can drop out of the token
-    // system when they need a one-off colour.
+    // Custom hex footer — always visible
     body.appendChild(renderCustomFooter(opts.current.hex, opts.onPickCustom, overlay));
-
-    if (filtered.length === 0 && q) {
-      const empty = document.createElement('div');
-      empty.className = 'swatch-picker-empty';
-      empty.textContent = `No tokens match "${q}"`;
-      body.insertBefore(empty, body.firstChild);
-    }
   };
 
   search.addEventListener('input', () => renderBody(search.value));
