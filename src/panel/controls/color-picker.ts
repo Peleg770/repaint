@@ -356,35 +356,45 @@ function renderCustomSection(currentHex: string | null, onPick: (hex: string) =>
   heading.textContent = 'Custom';
   cat.appendChild(heading);
 
-  // Grid row: native-picker swatch tile + hex text input
+  // Row: [label wrapping native input + visual tile] [hex text input]
   const row = document.createElement('div');
   row.style.cssText = 'display:flex;align-items:center;gap:6px;';
 
-  // Hidden native color input — triggered by the swatch tile
+  // <label> wraps the native input + the visual tile.
+  // Clicking anywhere on the label natively opens the OS colour picker —
+  // no JS click() needed, works across all browsers and shadow DOM.
+  const tileLabel = document.createElement('label');
+  tileLabel.title = 'Pick a custom colour';
+  tileLabel.style.cssText =
+    'position:relative;width:28px;height:28px;flex-shrink:0;display:block;cursor:pointer;border-radius:4px;overflow:hidden;';
+
+  // Native input — full-size inside the label, opacity:0 so it's invisible
+  // but fully interactive (browsers always allow user-gesture on visible area)
   const native = document.createElement('input');
   native.type = 'color';
   native.className = 'color-popover-native';
-  native.style.cssText = 'position:absolute;width:0;height:0;opacity:0;pointer-events:none;';
   native.value = currentHex ?? '#6366f1';
+  native.style.cssText =
+    'position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0;';
 
-  // Swatch tile — fixed 28×28px, does NOT use .swatch class (which has width:100%)
-  const pickerTile = document.createElement('button');
-  pickerTile.type = 'button';
+  // Visual tile — sits behind the transparent native input
+  const pickerTile = document.createElement('div');
   pickerTile.className = 'custom-picker-tile';
-  pickerTile.title = 'Pick a custom colour';
   pickerTile.style.cssText =
-    'width:28px;height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;' +
-    'border:2px solid var(--bvc-border);border-radius:4px;cursor:pointer;padding:0;' +
+    'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
+    'border:2px solid var(--bvc-border);border-radius:4px;pointer-events:none;' +
     `background:${currentHex ?? 'conic-gradient(in hsl, red, yellow, lime, cyan, blue, magenta, red)'};`;
   pickerTile.innerHTML =
-    '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 1px rgba(0,0,0,0.5))">' +
+    '<svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 1.5px rgba(0,0,0,0.6))">' +
     '<circle cx="7" cy="7" r="5.5"/>' +
-    '<circle cx="7" cy="4" r="1.5" fill="rgba(255,255,255,0.9)" stroke="none"/>' +
-    '<circle cx="9.6" cy="8.5" r="1.5" fill="rgba(255,255,255,0.9)" stroke="none"/>' +
-    '<circle cx="4.4" cy="8.5" r="1.5" fill="rgba(255,255,255,0.9)" stroke="none"/>' +
+    '<circle cx="7" cy="4"   r="1.5" fill="rgba(255,255,255,0.95)" stroke="none"/>' +
+    '<circle cx="9.6" cy="8.5" r="1.5" fill="rgba(255,255,255,0.95)" stroke="none"/>' +
+    '<circle cx="4.4" cy="8.5" r="1.5" fill="rgba(255,255,255,0.95)" stroke="none"/>' +
     '</svg>';
 
-  // Hex text input — secondary keyboard-friendly entry
+  tileLabel.append(native, pickerTile);
+
+  // Hex text input — keyboard entry
   const hex = document.createElement('input');
   hex.type = 'text';
   hex.className = 'mini-input color-popover-hex';
@@ -403,8 +413,6 @@ function renderCustomSection(currentHex: string | null, onPick: (hex: string) =>
     overlay.remove();
   };
 
-  pickerTile.addEventListener('click', () => native.click());
-
   native.addEventListener('input', () => {
     hex.value = native.value;
     pickerTile.style.background = native.value;
@@ -422,7 +430,7 @@ function renderCustomSection(currentHex: string | null, onPick: (hex: string) =>
     if (e.key === 'Enter') { e.preventDefault(); applyHex(hex.value); }
   });
 
-  row.append(native, pickerTile, hex);
+  row.append(tileLabel, hex);
   cat.appendChild(row);
   return cat;
 }
