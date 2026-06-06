@@ -245,8 +245,8 @@ function openColorPopover(opts: OpenPopoverProps): void {
       }
     }
 
-    // Custom hex footer — always visible
-    body.appendChild(renderCustomFooter(opts.current.hex, opts.onPickCustom, overlay));
+    // Custom section — native picker tile + hex input
+    body.appendChild(renderCustomSection(opts.current.hex, opts.onPickCustom, overlay));
   };
 
   search.addEventListener('input', () => renderBody(search.value));
@@ -341,7 +341,7 @@ function attachSwatchTooltip(btn: HTMLButtonElement, label: string): void {
   btn.addEventListener('mousedown', hide);
 }
 
-function renderCustomFooter(currentHex: string | null, onPick: (hex: string) => void, overlay: HTMLDivElement): HTMLDivElement {
+function renderCustomSection(currentHex: string | null, onPick: (hex: string) => void, overlay: HTMLDivElement): HTMLDivElement {
   const cat = document.createElement('div');
   cat.className = 'swatch-cat color-popover-custom';
 
@@ -350,14 +350,35 @@ function renderCustomFooter(currentHex: string | null, onPick: (hex: string) => 
   heading.textContent = 'Custom';
   cat.appendChild(heading);
 
+  // Grid row: native-picker swatch tile + hex text input
   const row = document.createElement('div');
-  row.className = 'color-popover-custom-row';
+  row.style.cssText = 'display:flex;align-items:center;gap:6px;';
 
+  // Hidden native color input — triggered by the swatch tile
   const native = document.createElement('input');
   native.type = 'color';
   native.className = 'color-popover-native';
-  native.value = currentHex ?? '#000000';
+  native.style.cssText = 'position:absolute;width:0;height:0;opacity:0;pointer-events:none;';
+  native.value = currentHex ?? '#6366f1';
 
+  // Swatch tile that opens the native picker — looks like a palette swatch
+  // but with a colour-wheel icon to signal interactivity.
+  const pickerTile = document.createElement('button');
+  pickerTile.type = 'button';
+  pickerTile.className = 'swatch custom-picker-tile';
+  pickerTile.title = 'Pick a custom colour';
+  pickerTile.style.cssText =
+    'position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center;' +
+    `background:${currentHex ?? 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)'};`;
+  pickerTile.innerHTML =
+    '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 1px rgba(0,0,0,0.5))">' +
+    '<circle cx="7" cy="7" r="5.5"/>' +
+    '<circle cx="7" cy="4" r="1.5" fill="rgba(255,255,255,0.9)" stroke="none"/>' +
+    '<circle cx="9.6" cy="8.5" r="1.5" fill="rgba(255,255,255,0.9)" stroke="none"/>' +
+    '<circle cx="4.4" cy="8.5" r="1.5" fill="rgba(255,255,255,0.9)" stroke="none"/>' +
+    '</svg>';
+
+  // Hex text input — secondary keyboard-friendly entry
   const hex = document.createElement('input');
   hex.type = 'text';
   hex.className = 'mini-input color-popover-hex';
@@ -365,37 +386,37 @@ function renderCustomFooter(currentHex: string | null, onPick: (hex: string) => 
   hex.placeholder = '#rrggbb';
   hex.spellcheck = false;
   hex.value = currentHex ?? '';
+  hex.style.cssText = 'flex:1;';
 
-  const apply = document.createElement('button');
-  apply.type = 'button';
-  apply.className = 'pick-btn color-popover-apply';
-  apply.textContent = 'Apply';
-
-  const tryApply = (raw: string) => {
+  const applyHex = (raw: string) => {
     const normalized = normaliseHex(raw);
-    if (!normalized) return false;
+    if (!normalized) return;
+    native.value = normalized;
+    pickerTile.style.background = normalized;
     onPick(normalized);
     overlay.remove();
-    return true;
   };
+
+  pickerTile.addEventListener('click', () => native.click());
 
   native.addEventListener('input', () => {
     hex.value = native.value;
+    pickerTile.style.background = native.value;
   });
-  native.addEventListener('change', () => tryApply(native.value));
+  native.addEventListener('change', () => {
+    onPick(native.value);
+    overlay.remove();
+  });
+
   hex.addEventListener('input', () => {
     const n = normaliseHex(hex.value);
-    if (n) native.value = n;
+    if (n) { native.value = n; pickerTile.style.background = n; }
   });
-  hex.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      tryApply(hex.value);
-    }
+  hex.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Enter') { e.preventDefault(); applyHex(hex.value); }
   });
-  apply.addEventListener('click', () => tryApply(hex.value));
 
-  row.append(native, hex, apply);
+  row.append(native, pickerTile, hex);
   cat.appendChild(row);
   return cat;
 }

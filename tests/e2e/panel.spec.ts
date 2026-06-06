@@ -209,17 +209,13 @@ test.describe('Color selection', () => {
   test('custom hex input applies exact hex to element', async ({ page }) => {
     await openFillPopover(page);
 
-    // Fill the hex input and apply
+    // Fill the hex input and press Enter to apply
     await page.evaluate(() => {
       const shadow = (document.getElementById('repaint-host') as HTMLElement).shadowRoot!;
       const hexInput = shadow.querySelector('.color-popover-hex') as HTMLInputElement;
       hexInput.value = '#ff6600';
       hexInput.dispatchEvent(new Event('input'));
-    });
-
-    await page.evaluate(() => {
-      const shadow = (document.getElementById('repaint-host') as HTMLElement).shadowRoot!;
-      (shadow.querySelector('.color-popover-apply') as HTMLButtonElement).click();
+      hexInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     });
 
     await page.waitForFunction(() => {
@@ -237,16 +233,13 @@ test.describe('Color selection', () => {
   test('native color picker applies color on change', async ({ page }) => {
     await openFillPopover(page);
 
-    // Trigger native color input with a new value
+    // Trigger native color picker change event — it applies immediately (no Apply button)
     await page.evaluate(() => {
       const shadow = (document.getElementById('repaint-host') as HTMLElement).shadowRoot!;
       const native = shadow.querySelector('.color-popover-native') as HTMLInputElement;
       native.value = '#00cc44';
       native.dispatchEvent(new Event('input'));
-      // Sync to hex field then apply
-      const hexInput = shadow.querySelector('.color-popover-hex') as HTMLInputElement;
-      hexInput.dispatchEvent(new Event('input'));
-      (shadow.querySelector('.color-popover-apply') as HTMLButtonElement).click();
+      native.dispatchEvent(new Event('change'));
     });
 
     await page.waitForFunction(() => {
@@ -295,10 +288,10 @@ test.describe('Color picker — "On this page" section', () => {
       search.dispatchEvent(new Event('input'));
     });
 
-    // Should show only brand tokens
+    // Should show only brand tokens (exclude the custom-picker-tile swatch)
     const swatchCount = await page.evaluate(() => {
       const shadow = (document.getElementById('repaint-host') as HTMLElement).shadowRoot!;
-      return shadow.querySelectorAll('.swatch').length;
+      return shadow.querySelectorAll('.swatch:not(.custom-picker-tile)').length;
     });
 
     // We have 5 brand colors: coral, teal, amber, sky, rose
