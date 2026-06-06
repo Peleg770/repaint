@@ -764,7 +764,7 @@ interface ScrubControls {
   setValue: (next: number) => void;
 }
 
-function buildScrubInput(opts: {
+export function buildScrubInput(opts: {
   unit: string;
   initial: number;
   min?: number;
@@ -880,54 +880,20 @@ function makeColorRow(
 function makeRangeInput(
   label: string,
   current: number,
-  min: number,
+  _min: number,
   max: number,
   unit: string,
   onSet: (val: number | null) => void,
 ): HTMLDivElement {
   const row = document.createElement('div');
   row.className = 'two-col';
-
   const lbl = document.createElement('div');
   lbl.className = 'control-label';
   lbl.textContent = label;
-
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'display:flex;align-items:center;gap:4px;';
-
-  const range = document.createElement('input');
-  range.type = 'range';
-  range.min = String(min);
-  range.max = String(max);
-  range.value = String(current);
-  range.style.cssText = 'width:60px;';
-
-  const num = document.createElement('input');
-  num.type = 'number';
-  num.className = 'text-input';
-  num.style.cssText = 'width:42px;';
-  num.min = String(min);
-  num.max = String(max);
-  num.value = String(current);
-
-  const unitLbl = document.createElement('span');
-  unitLbl.className = 'control-label';
-  unitLbl.textContent = unit;
-  unitLbl.style.opacity = '0.5';
-
-  range.addEventListener('input', () => {
-    num.value = range.value;
-    const v = parseFloat(range.value);
-    onSet(isNaN(v) ? null : v);
-  });
-  num.addEventListener('input', () => {
-    range.value = num.value;
-    const v = parseFloat(num.value);
-    onSet(isNaN(v) ? null : v);
-  });
-
-  wrap.append(range, num, unitLbl);
-  row.append(lbl, wrap);
+  // Use the scrub pattern (Figma-style drag handle + number) instead of
+  // a range slider — wider display, no clipping, consistent with other rows.
+  const scrub = buildScrubInput({ unit, initial: current, min: 0, max, onChange: onSet });
+  row.append(lbl, scrub.root);
   return row;
 }
 

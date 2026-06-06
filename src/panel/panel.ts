@@ -1,5 +1,4 @@
 import { panelCss, PANEL_WIDTH } from './styles';
-import { createClassSection, getClassChanges } from './controls/class-editor';
 import { createLayoutSections, createVisualSections } from './controls/css-props';
 import { buildTypographySection } from './controls/typography-section';
 import { buildSessionPrompt, copyToClipboard, postApply } from './apply';
@@ -355,7 +354,6 @@ export class Panel {
     const elements = Array.from(this.snapshots.entries()).map(([el, snapshot]) => ({
       el,
       snapshot,
-      classChanges: getClassChanges(el),
     }));
     return buildSessionPrompt(elements);
   }
@@ -369,10 +367,7 @@ export class Panel {
     this.refreshTargetStrip();
     this.refreshChanges();
 
-    // 1. Classes
-    this.body.appendChild(createClassSection(el, () => this.handlers.onMutated?.()));
-
-    // 2. Layout
+    // 1. Layout
     for (const s of createLayoutSections(el, () => this.handlers.onMutated?.())) {
       this.body.appendChild(s);
     }

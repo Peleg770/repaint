@@ -21,7 +21,7 @@ export const panelCss = /* css */ `
     --bvc-bg-focus: var(--c-background-focus, #e6fff2);
     --bvc-border: var(--c-border-subtle, #ececee);
     --bvc-border-strong: var(--c-border-strong, #dedee0);
-    --bvc-accent: var(--c-text-interactive, #029449);
+    --bvc-accent: var(--c-text-interactive, #6366f1);
     --bvc-success: var(--c-text-success, #3cc67e);
     --bvc-error: var(--c-text-error, #eb6166);
     --bvc-warn-bg: var(--c-tag-yellow-bg, #fff8e6);
