@@ -1,6 +1,7 @@
 // src/panel/css-var-scanner.test.ts
 import { describe, it, expect } from 'vitest';
 import { JSDOM } from 'jsdom';
+import type { ScannedToken } from './css-var-scanner';
 import { scanCssVars } from './css-var-scanner';
 
 function setupDom(css: string): void {
@@ -22,7 +23,7 @@ describe('scanCssVars', () => {
   it('extracts color custom properties from :root', () => {
     setupDom(':root { --color-primary: #6366f1; --color-text: #111; --spacing-md: 16px; }');
     const tokens = scanCssVars();
-    const names = tokens.map(t => t.cssVar);
+    const names = tokens.map((t: ScannedToken) => t.cssVar);
     expect(names).toContain('--color-primary');
     expect(names).toContain('--color-text');
     expect(names).not.toContain('--spacing-md');
