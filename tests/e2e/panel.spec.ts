@@ -319,20 +319,23 @@ test.describe('Scroll behaviour', () => {
     const result = await page.evaluate(() => {
       const shadow = (document.getElementById('repaint-host') as HTMLElement).shadowRoot!;
       const popover = shadow.querySelector('.popover') as HTMLElement;
-      const cs = window.getComputedStyle(popover);
+      // Token body scrolls; custom section is sticky below it
+      const scrollBody = shadow.querySelector('.color-popover .swatch-picker-body') as HTMLElement;
+      const popCs = window.getComputedStyle(popover);
+      const bodyCs = window.getComputedStyle(scrollBody);
       return {
-        overflowY: cs.overflowY,
-        isScrollable: popover.scrollHeight > popover.clientHeight,
-        maxHeight: cs.maxHeight,
+        popoverMaxHeight: popCs.maxHeight,
+        bodyOverflowY: bodyCs.overflowY,
+        bodyScrollable: scrollBody.scrollHeight > scrollBody.clientHeight,
       };
     });
 
-    // overflow-y must allow scrolling
-    expect(['auto', 'scroll']).toContain(result.overflowY);
-    // max-height must be set (not 'none')
-    expect(result.maxHeight).not.toBe('none');
-    // With 37 tokens the content must actually overflow
-    expect(result.isScrollable).toBe(true);
+    // Popover must have a max-height set (not 'none') so it's bounded
+    expect(result.popoverMaxHeight).not.toBe('none');
+    // Token body must be scrollable
+    expect(['auto', 'scroll']).toContain(result.bodyOverflowY);
+    // With 37 tokens the body must actually overflow
+    expect(result.bodyScrollable).toBe(true);
   });
 
   test('panel body is scrollable when sections overflow', async ({ page }) => {

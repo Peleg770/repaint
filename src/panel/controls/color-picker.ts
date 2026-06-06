@@ -197,8 +197,12 @@ function openColorPopover(opts: OpenPopoverProps): void {
 
   const body = document.createElement('div');
   body.className = 'swatch-picker-body';
+  // body scrolls; custom section is rendered outside it so it's always visible
 
-  popover.append(head, search, body);
+  // Custom section — always sticky at the bottom, outside the scrollable body
+  const customSection = renderCustomSection(opts.current.hex, opts.onPickCustom, overlay);
+
+  popover.append(head, search, body, customSection);
   overlay.appendChild(popover);
   shadowRoot.appendChild(overlay);
 
@@ -248,8 +252,7 @@ function openColorPopover(opts: OpenPopoverProps): void {
       }
     }
 
-    // Custom section — native picker tile + hex input
-    body.appendChild(renderCustomSection(opts.current.hex, opts.onPickCustom, overlay));
+    // custom section is outside body (sticky) — nothing to append here
   };
 
   search.addEventListener('input', () => renderBody(search.value));
@@ -364,15 +367,15 @@ function renderCustomSection(currentHex: string | null, onPick: (hex: string) =>
   native.style.cssText = 'position:absolute;width:0;height:0;opacity:0;pointer-events:none;';
   native.value = currentHex ?? '#6366f1';
 
-  // Swatch tile that opens the native picker — looks like a palette swatch
-  // but with a colour-wheel icon to signal interactivity.
+  // Swatch tile — fixed 28×28px, does NOT use .swatch class (which has width:100%)
   const pickerTile = document.createElement('button');
   pickerTile.type = 'button';
-  pickerTile.className = 'swatch custom-picker-tile';
+  pickerTile.className = 'custom-picker-tile';
   pickerTile.title = 'Pick a custom colour';
   pickerTile.style.cssText =
-    'position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center;' +
-    `background:${currentHex ?? 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)'};`;
+    'width:28px;height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;' +
+    'border:2px solid var(--bvc-border);border-radius:4px;cursor:pointer;padding:0;' +
+    `background:${currentHex ?? 'conic-gradient(in hsl, red, yellow, lime, cyan, blue, magenta, red)'};`;
   pickerTile.innerHTML =
     '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 1px rgba(0,0,0,0.5))">' +
     '<circle cx="7" cy="7" r="5.5"/>' +

@@ -2326,20 +2326,28 @@ export const panelCss = /* css */ `
   }
   .popover {
     position: absolute;
-    /* Popover hugs its content. Lower bound keeps short pickers (radius,
-       spacing) readable; upper bound prevents the swatch picker from going
-       wider than the panel. */
     width: max-content;
     min-width: 200px;
     max-width: 320px;
     max-height: 70vh;
-    overflow-y: auto;
+    /* flex-column so the token body scrolls while custom section stays pinned */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     background: var(--bvc-bg);
     border: 1px solid var(--bvc-border-strong);
     border-radius: 8px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
     padding: 10px;
+    gap: 8px;
     pointer-events: auto;
+  }
+
+  /* Token body scrolls independently; custom section sits below it */
+  .color-popover .swatch-picker-body {
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   /* Swatch picker (inside popover) */
