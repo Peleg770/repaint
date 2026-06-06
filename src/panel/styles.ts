@@ -28,9 +28,7 @@ export const panelCss = /* css */ `
     --bvc-warn-text: var(--c-tag-yellow-text, #8e581f);
 
     /* Selector-strip syntax-color tints — tag (orange-ish), id (purple),
-       and the Tailwind-utility chip badge. Hard hex values in light mode
-       so we don't over-couple to cxui tokens; dark mode equivalents land
-       in the @media + :host-context blocks below. */
+       and the Tailwind-utility chip badge. */
     --bvc-syntax-tag: #b04500;
     --bvc-syntax-id: #6941c6;
     --bvc-syntax-tw: #5925dc;
@@ -86,78 +84,6 @@ export const panelCss = /* css */ `
        mouse clicks don't trigger keyboard-focus rings. */
     --bvc-focus-ring: 2px solid var(--bvc-accent);
     --bvc-focus-offset: 1px;
-  }
-
-  /* ── Dark mode ─────────────────────────────────────────────────────────
-     When the host page exposes cxui's --c-* tokens, those tokens flip
-     automatically (cxui uses class-based dark mode). When they don't,
-     the fallback hex values above are LIGHT — which makes the panel
-     unreadable on dark pages. Override the fallbacks for both the
-     system preference (prefers-color-scheme) and the class-based
-     trigger (html.dark, the cxui convention).
-
-     Each rule sets the FALLBACK only — when --c-* tokens are defined
-     they still win, because they're the first arg of var(). This means
-     adding dark mode here doesn't fight cxui's tokens; it only fills
-     in when cxui isn't loaded. */
-  @media (prefers-color-scheme: dark) {
-    :host {
-      --bvc-fg: var(--c-text-primary, #e6e6e9);
-      --bvc-fg-2: var(--c-text-secondary, #a1a1a6);
-      --bvc-fg-muted: var(--c-text-disabled, #6e6e72);
-      /* Tiered elevation: bg = panel surround (deepest), bg-2 = inset
-         controls (clearly lifted), bg-hover = transient highlight.
-         Dark-mode panels use direct hex (no var()) instead of inheriting
-         the host page's cxui tokens — Coralogix dark mode resolves the
-         host's surface-secondary to near-pure-black and surface-primary
-         barely lifted, which makes panel surround and controls merge.
-         The Shadow-DOM panel is its own visual surface; it needs to be
-         readable, not color-matched. Borders also use hex for the same
-         reason — subtle Coralogix border tokens disappear against
-         near-black backgrounds. */
-      --bvc-bg: #1c1c22;
-      --bvc-bg-2: #2e2e38;
-      /* Inputs sit ~10 L above bg-2 so the editable surface is visibly
-         distinct from section backgrounds and segmented controls. */
-      --bvc-input-bg: #3d3d4a;
-      --bvc-figma-pad-bg: #222222;
-      --bvc-bg-hover: rgba(255, 255, 255, 0.08);
-      --bvc-bg-focus: var(--c-background-focus, rgba(2, 148, 73, 0.22));
-      --bvc-border: #44444f;
-      --bvc-border-strong: #5e5e6c;
-      --bvc-warn-bg: var(--c-tag-yellow-bg, #3a2a14);
-      --bvc-warn-text: var(--c-tag-yellow-text, #f7c97a);
-      --bvc-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-      --bvc-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
-      --bvc-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.35);
-      --bvc-syntax-tag: #ff9966;
-      --bvc-syntax-id: #b294f6;
-      --bvc-syntax-tw: #a89cf6;
-    }
-  }
-  :host-context(html.dark),
-  :host-context(.dark) {
-    --bvc-fg: var(--c-text-primary, #e6e6e9);
-    --bvc-fg-2: var(--c-text-secondary, #a1a1a6);
-    --bvc-fg-muted: var(--c-text-disabled, #6e6e72);
-    /* Surface + border tokens use direct hex in dark mode (see comment
-       in the @media block above for the rationale). */
-    --bvc-bg: #1c1c22;
-    --bvc-bg-2: #2e2e38;
-    --bvc-input-bg: #3d3d4a;
-    --bvc-figma-pad-bg: #222222;
-    --bvc-bg-hover: rgba(255, 255, 255, 0.08);
-    --bvc-bg-focus: var(--c-background-focus, rgba(2, 148, 73, 0.22));
-    --bvc-border: #44444f;
-    --bvc-border-strong: #5e5e6c;
-    --bvc-warn-bg: var(--c-tag-yellow-bg, #3a2a14);
-    --bvc-warn-text: var(--c-tag-yellow-text, #f7c97a);
-    --bvc-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --bvc-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
-    --bvc-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.35);
-    --bvc-syntax-tag: #ff9966;
-    --bvc-syntax-id: #b294f6;
-    --bvc-syntax-tw: #a89cf6;
   }
 
   *, *::before, *::after { box-sizing: border-box; }
