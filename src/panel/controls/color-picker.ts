@@ -6,6 +6,7 @@
 
 import type { ScannedToken } from '../css-var-scanner';
 import { findUsedTokens, groupTokensByPrefix } from '../css-var-scanner';
+import { positionPopover } from '../popover-utils';
 
 export interface NarrowedTokens {
   /** Tokens to render in the popover, in display order. */
@@ -174,7 +175,6 @@ interface OpenPopoverProps {
 
 function openColorPopover(opts: OpenPopoverProps): void {
   const shadowRoot = opts.anchor.getRootNode() as ShadowRoot;
-  const rect = opts.anchor.getBoundingClientRect();
 
   const overlay = document.createElement('div');
   overlay.className = 'popover-overlay';
@@ -182,7 +182,7 @@ function openColorPopover(opts: OpenPopoverProps): void {
 
   const popover = document.createElement('div');
   popover.className = 'popover color-popover';
-  popover.style.cssText = `top:${rect.bottom + 6}px;left:${Math.max(8, rect.left)}px;width:300px;max-height:70vh;`;
+  popover.style.width = '300px';
   popover.addEventListener('click', e => e.stopPropagation());
 
   const head = document.createElement('div');
@@ -201,6 +201,9 @@ function openColorPopover(opts: OpenPopoverProps): void {
   popover.append(head, search, body);
   overlay.appendChild(popover);
   shadowRoot.appendChild(overlay);
+
+  // Position after mounting so the browser has the popover's dimensions.
+  positionPopover(popover, opts.anchor, 300);
 
   const currentToken = findTokenByCssValue(opts.tokens, opts.current.raw);
   const { offScale } = selectVisibleTokens(opts.tokens, currentToken);

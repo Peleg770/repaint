@@ -1,5 +1,6 @@
 import { SHADOW_PRESETS, SPACING_SCALE, RADIUS_SCALE, findStop, matchShadow, type ShadowPreset, type SpacingStop } from '../design-tokens';
 import type { ScannedToken } from '../css-var-scanner';
+import { positionPopover } from '../popover-utils';
 
 import { createColorChip } from './color-picker';
 import { createSection } from './section';
@@ -702,15 +703,13 @@ function makeTokenAwarePxInput(label: string, current: number, scale: SpacingSto
 
 function openTokenPicker(anchor: HTMLElement, scale: SpacingStop[], onPick: (stop: SpacingStop) => void): void {
   const shadowRoot = anchor.getRootNode() as ShadowRoot;
-  const rect = anchor.getBoundingClientRect();
-
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483646;';
   overlay.addEventListener('click', () => overlay.remove());
 
   const menu = document.createElement('div');
   menu.className = 'popover';
-  menu.style.cssText = `top:${rect.bottom + 4}px;left:${rect.left}px;padding:4px;min-width:140px;`;
+  menu.style.cssText = 'padding:4px;min-width:140px;';
   menu.addEventListener('click', e => e.stopPropagation());
 
   for (const stop of scale) {
@@ -733,6 +732,7 @@ function openTokenPicker(anchor: HTMLElement, scale: SpacingStop[], onPick: (sto
 
   overlay.appendChild(menu);
   shadowRoot.appendChild(overlay);
+  positionPopover(menu, anchor, 160);
 }
 
 function makePxInput(label: string, current: number, onSet: (val: number | null) => void): HTMLDivElement {
